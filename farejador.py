@@ -21,7 +21,6 @@ if cur.rowcount:
     print "Atualizando..."
 else:
     cur.execute("insert into recursos_recurso (\"tipoRecurso_id\",recurso,pai_id) values (4,'" + nomeProjeto + "',2)")
-    #cur.execute("insert into recursos_recurso values (NULL,4,'" + nomeProjeto + "',2, '', '')")
     print "Incluindo projeto: %s" % (nomeProjeto)
 
 
@@ -51,8 +50,8 @@ for path, dirs, files in os.walk(dirFiles):
 
     cur.execute("select * from recursos_recurso where recurso = '" + atual  + "'")
 
-    print "select * from recursos_recurso where recurso = '" + atual  + "'"
-    print "Path: " + path + ""
+    #print "select * from recursos_recurso where recurso = '" + atual  + "'"
+    #print "Path: " + path + ""
     if not cur.rowcount:
         cur.execute("insert into recursos_recurso (\"tipoRecurso_id\",recurso,pai_id) values(2,'%s','%s')" % (atual,anterior))
         #print "Incluindo diretorio: %s -> %s \n Path do atual: %s" % (pai,atual,path)
@@ -68,11 +67,34 @@ for path, dirs, files in os.walk(dirFiles):
         print "Problema ao selecionar o diretorio atual no banco"
         sys.exit(0)
     
-    print "Diretorio atual: id(%s) %s " % (idAnterior,atual)
+    #print "Diretorio atual: id(%s) %s " % (idAnterior,atual)
 
     for arquivos in files:
         cur.execute("insert into recursos_recurso (\"tipoRecurso_id\",recurso,pai_id) values(5,'%s','%s')" % (arquivos,idAnterior))
-        print "Incluido arquivo:(id=%s) %s -> %s \n Path do atual: %s" % (idAnterior,atual,arquivos,path)
+        #print "Incluido arquivo:(id=%s) %s -> %s \n Path do atual: %s" % (idAnterior,atual,arquivos,path)
+        if arquivos[-3:] == "php":
+            caminhoDoArquivo = "" + path + "/" + arquivos
+            #print "Tipo do arquivo: " +  type(caminhoDoArquivo) + ""
+            for lin in open(caminhoDoArquivo):
+                cur.execute("select id from recursos_recurso where recurso = '%s'" % (arquivos))
+
+                if cur.rowcount:
+                    idArquivo = cur.fetchone()
+                    idArquivo = idArquivo[0]
+
+                if lin.find("function") >= 0:
+                    funcao = ""
+                    funcao = lin.strip()[9:]
+                    funcao = funcao.split("//")[0]
+                    funcao = funcao.replace("'","")
+                    funcao = repr(funcao)
+                    funcao = funcao.replace("'","")
+                    
+                    
+                    #print "Funcao: "+ funcao +""
+                    #print '''SQL:  insert into recursos_recurso ("tipoRecurso_id",recurso,pai_id) values(9,'%s','%s')''' % (funcao,idArquivo)
+                    cur.execute('''insert into recursos_recurso ("tipoRecurso_id",recurso,pai_id) values(9,'%s','%s')''' % (funcao,idArquivo))
+
 
 
     anterior = atual
